@@ -1,14 +1,14 @@
-import "./index.css"
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Login from "./screens/login";
+import Home from "./screens/home";
 
-function App() {
-
+export default function App() {
   return (
-    <>
-      <div className="w-screen h-screen p-4">
-        <p>asdasdasdasdasdad</p>
-      </div>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/home" element={<Home />} />
+      </Routes>
+    </Router>
+  );
 }
-
-export default App
