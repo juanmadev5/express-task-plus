@@ -19,6 +19,7 @@ export default function Login() {
   const handleLogin = async () => {
     const loggedIn = await loginHandler(email, password);
     if (loggedIn) {
+      setErrorMessage("")
       navigate("/home");
     } else {
       setErrorMessage("Email or password incorrect, try again.");
@@ -83,17 +84,14 @@ export default function Login() {
       {errorMessage && (
         <div className="mt-4 p-4 bg-transparent text-white rounded-lg w-80 text-center">
           {errorMessage}
-          <p className="mt-2">
-            ¿Don't have an account?{" "}
-            <span
-              onClick={() => navigate("/register")}
-              className="text-cyan-300 cursor-pointer"
-            >
-              Register here
-            </span>
-          </p>
         </div>
       )}
+      <span
+        onClick={() => navigate("/register")}
+        className="text-cyan-300 cursor-pointer mt-6"
+      >
+        Register here
+      </span>
     </div>
   );
 }
