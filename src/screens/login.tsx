@@ -1,6 +1,6 @@
 import "../index.css";
 import applogo from "../assets/app-logo.png";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import loginHandler from "../backend/login-handler";
 import { useNavigate } from "react-router-dom";
 
@@ -9,6 +9,12 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      navigate("/home");
+    }
+  }, [navigate]);
   const handleLogin = async () => {
     const loggedIn = await loginHandler(email, password);
     if (loggedIn) {
@@ -17,11 +23,18 @@ export default function Login() {
       setErrorMessage("Email or password incorrect, try again.");
     }
   };
+  // @ts-ignore
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      handleLogin();
+    }
+  };
+
   return (
     <div className="font-comfortaa w-screen min-h-screen p-5 flex flex-col items-center justify-center bg-slate-900">
       <img src={applogo} className="w-20 h-20 mb-8" alt="App Logo" />
-      <h1 className="text-cyan-400 text-3xl font-semibold mb-8">
-        Login to Express Task+
+      <h1 translate="no" className="text-cyan-400 text-3xl font-semibold mb-8">
+        Express Task+
       </h1>
 
       <div className="flex flex-col w-80">
@@ -49,6 +62,7 @@ export default function Login() {
           className="p-3 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white placeholder-gray-500 transition duration-150"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyPress={handleKeyPress}
         />
       </div>
 
@@ -67,7 +81,7 @@ export default function Login() {
               onClick={() => navigate("/register")}
               className="text-cyan-300 cursor-pointer"
             >
-              Regístrate aquí
+              Register here
             </span>
           </p>
         </div>
