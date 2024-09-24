@@ -8,9 +8,10 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
     if (storedUser) {
       navigate("/home");
     }
@@ -25,7 +26,7 @@ export default function Login() {
   };
   // @ts-ignore
   const handleKeyPress = (event) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       handleLogin();
     }
   };
@@ -56,7 +57,7 @@ export default function Login() {
           Password
         </label>
         <input
-          type="password"
+          type={showPassword ? "text" : "password"}
           id="password"
           placeholder="********"
           className="p-3 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white placeholder-gray-500 transition duration-150"
@@ -64,6 +65,13 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
           onKeyPress={handleKeyPress}
         />
+        <button
+          type="button"
+          className="p-3 text-gray-300 hover:text-white transition duration-150"
+          onClick={() => setShowPassword((prev) => !prev)}
+        >
+          {showPassword ? "Hide password" : "Show password"}
+        </button>
       </div>
 
       <button

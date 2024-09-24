@@ -12,7 +12,7 @@ export default function Card({ task, onComplete, onDelete }: CardProps) {
   return (
     <div className="bg-gradient-to-b from-gray-100 to-white text-slate-700 border border-slate-200 grid grid-col-2 justify-start p-4 gap-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-400 ease-in-out transform hover:scale-[1.02] m-2 max-md:w-80">
       <div className="col-span-2 w-full">
-        <h3 className={`text-lg font-semibold text-gray-800 truncate pb-6 ${task.completed ? 'line-through' : ''}`}>
+        <h3 className={`text-lg font-semibold text-gray-800 whitespace-pre-wrap break-all truncate pb-6 ${task.completed ? 'line-through' : ''}`}>
           {task.todo}
         </h3>
       </div>

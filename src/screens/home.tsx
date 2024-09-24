@@ -7,6 +7,7 @@ import AddTaskModal from "../components/add-task";
 import { motion, AnimatePresence } from "framer-motion";
 
 export type Task = {
+  createdAt: number;
   completed: boolean;
   taskId: string;
   todo: string;
@@ -25,57 +26,67 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
     const user = storedUser ? JSON.parse(storedUser) : null;
 
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
     const db = getDatabase();
-    const userRef = ref(db, 'users/' + user.uid);
-    get(userRef).then(snapshot => {
-      if (snapshot.exists()) {
-        const userData: User = snapshot.val();
-        setTasks(userData.tasks || []);
-      } else {
-        setTasks([]);
-      }
-    }).catch(error => {
-      console.error(error);
-    });
+    const userRef = ref(db, "users/" + user.uid);
+    get(userRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          const userData: User = snapshot.val();
+          const tasksArray = userData.tasks
+            ? Object.values(userData.tasks)
+            : [];
+          tasksArray.sort((a, b) => b.createdAt - a.createdAt);
+          setTasks(tasksArray);
+        } else {
+          setTasks([]);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }, [navigate]);
 
   const handleComplete = (taskId: string) => {
-    const updatedTasks = tasks.map(task =>
+    const updatedTasks = tasks.map((task) =>
       task.taskId === taskId ? { ...task, completed: !task.completed } : task
     );
     setTasks(updatedTasks);
     const db = getDatabase();
-    const user = JSON.parse(localStorage.getItem('user')!);
-    const userRef = ref(db, 'users/' + user.uid + '/tasks/' + taskId);
-    update(userRef, { completed: !updatedTasks.find(task => task.taskId === taskId)?.completed });
+    const user = JSON.parse(localStorage.getItem("user")!);
+    const userRef = ref(db, "users/" + user.uid + "/tasks/" + taskId);
+    update(userRef, {
+      completed: !updatedTasks.find((task) => task.taskId === taskId)
+        ?.completed,
+    });
   };
 
   const handleDelete = (taskId: string) => {
-    const updatedTasks = tasks.filter(task => task.taskId !== taskId);
+    const updatedTasks = tasks.filter((task) => task.taskId !== taskId);
     setTasks(updatedTasks);
     const db = getDatabase();
-    const user = JSON.parse(localStorage.getItem('user')!);
-    const userRef = ref(db, 'users/' + user.uid + '/tasks/' + taskId);
-    remove(userRef).catch(error => {
+    const user = JSON.parse(localStorage.getItem("user")!);
+    const userRef = ref(db, "users/" + user.uid + "/tasks/" + taskId);
+    remove(userRef).catch((error) => {
       console.error("Error removing task: ", error);
     });
   };
 
   const handleAddTask = (newTask: Task) => {
-    setTasks(prevTasks => [...prevTasks, newTask]);
+    setTasks((prevTasks) => {
+      if (!Array.isArray(prevTasks)) {
+        console.error("prevTasks is not an array:", prevTasks);
+        return [];
+      }
+      return [newTask, ...prevTasks];
+    });
 
     const db = getDatabase();
-    const user = JSON.parse(localStorage.getItem('user')!);
-    const userRef = ref(db, 'users/' + user.uid + '/tasks/' + newTask.taskId);
-    update(userRef, newTask).catch(error => {
+    const user = JSON.parse(localStorage.getItem("user")!);
+    const userRef = ref(db, "users/" + user.uid + "/tasks/" + newTask.taskId);
+    update(userRef, newTask).catch((error) => {
       console.error("Error adding task: ", error);
     });
   };
@@ -89,10 +100,10 @@ export default function Home() {
             tasks.map((task) => (
               <motion.div
                 key={task.taskId}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 <Card
                   task={task}
@@ -104,14 +115,13 @@ export default function Home() {
             ))
           ) : (
             <motion.div
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <p className="mt-6">No tasks created yet</p>
+              <p className="m-4">No tasks created yet</p>
             </motion.div>
-
           )}
         </AnimatePresence>
       </div>
