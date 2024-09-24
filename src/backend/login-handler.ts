@@ -17,6 +17,7 @@ export default async function loginHandler(email: string, password: string) {
         name: userData.name,
         lastName: userData.last_name,
         email: user.email,
+        tasks: userData.tasks || []
       }));
     } else {
       console.error("User not found in database.");
