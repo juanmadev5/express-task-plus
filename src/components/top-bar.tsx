@@ -10,10 +10,17 @@ export default function TopBar({ name }: User) {
   };
 
   return (
-    <div className="w-full h-auto flex p-3 justify-between items-center bg-sky-950 rounded-2xl">
-      <h2 className="text-2xl font-semibold max-md:text-sm">{name}</h2>
+    <div className="w-auto h-auto flex p-3 justify-between items-center max-md:w-full">
+      <h2 className="text-2xl mr-8 font-semibold max-md:text-sm ml-2">
+        {name}
+      </h2>
       <p onClick={handleLogout}>
-        <a href="">Logout</a>
+        <a href="">
+          <img
+            src="https://img.icons8.com/color/48/exit.png"
+            className="w-8 h-8"
+          ></img>
+        </a>
       </p>
     </div>
   );

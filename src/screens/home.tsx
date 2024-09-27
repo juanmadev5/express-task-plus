@@ -1,10 +1,7 @@
-import TopBar from "../components/top-bar";
-import Card from "../components/card";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { get, getDatabase, ref, update, remove } from "firebase/database";
-import AddTaskModal from "../components/add-task";
-import { motion, AnimatePresence } from "framer-motion";
+import TopBar from "../components/top-bar";
 
 export type Task = {
   createdAt: number;
@@ -23,8 +20,8 @@ export type User = {
 export default function Home() {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [userName, setUser] = useState("");
+  const [newTask, setNewTask] = useState("");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -52,16 +49,24 @@ export default function Home() {
   }, [navigate]);
 
   const handleComplete = (taskId: string) => {
-    const updatedTasks = tasks.map((task) =>
-      task.taskId === taskId ? { ...task, completed: !task.completed } : task
-    );
-    setTasks(updatedTasks);
-    const db = getDatabase();
-    const user = JSON.parse(localStorage.getItem("user")!);
-    const userRef = ref(db, "users/" + user.uid + "/tasks/" + taskId);
-    update(userRef, {
-      completed: !updatedTasks.find((task) => task.taskId === taskId)
-        ?.completed,
+    tasks.map((task) => {
+      if (task.taskId === taskId) {
+        const updatedTask = { ...task, completed: !task.completed };
+        setTasks((prevTasks) =>
+          prevTasks.map((prevTask) =>
+            prevTask.taskId === taskId ? updatedTask : prevTask
+          )
+        );
+        const db = getDatabase();
+        const user = JSON.parse(localStorage.getItem("user")!);
+        const userRef = ref(db, "users/" + user.uid + "/tasks/" + taskId);
+        update(userRef, { completed: updatedTask.completed }).catch((error) => {
+          console.error("Error updating task: ", error);
+        });
+
+        return updatedTask;
+      }
+      return task;
     });
   };
 
@@ -93,56 +98,81 @@ export default function Home() {
     });
   };
 
+  const addTask = () => {
+    if (newTask.trim() !== "") {
+      const task: Task = {
+        createdAt: Date.now(),
+        completed: false,
+        taskId: Date.now().toString(),
+        todo: newTask,
+      };
+      handleAddTask(task);
+      setNewTask("");
+    }
+  };
+
+  const remainingTasks = tasks.filter((task) => !task.completed).length;
+
   return (
-    <div className="items-center bg-sky-900 text-white min-h-screen p-2 max-md:p-4">
-      <TopBar email={""} last_name={""} name={userName} tasks={[]} />
-      <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 pt-3 max-md:flex max-md:flex-col max-md:items-center">
-        <AnimatePresence>
-          {tasks.length > 0 ? (
-            tasks.map((task) => (
-              <motion.div
-                key={task.taskId}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                <Card
-                  task={task}
-                  onComplete={handleComplete}
-                  onDelete={handleDelete}
-                  key={task.taskId}
-                />
-              </motion.div>
-            ))
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <p className="m-4">No tasks created yet</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+    <div className="min-h-screen bg-gray-100">
+      <div className="top-bar flex justify-center mb-4">
+        <TopBar email={""} last_name={""} name={userName} tasks={[]} />
       </div>
 
-      <button
-        className="fixed bottom-6 right-6 bg-blue-500 rounded-full p-4 shadow-lg hover:bg-blue-600 transition-all duration-300"
-        onClick={() => setIsModalOpen(true)}
-      >
-        <img
-          src="https://img.icons8.com/material-outlined/24/ffffff/add.png"
-          alt="Add Task"
-          className="w-8 h-8"
-        />
-      </button>
-      <AddTaskModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAddTask={handleAddTask}
-      />
+      <div className="container mx-auto p-4">
+        <div className="w-full max-w-md mx-auto border rounded-lg shadow-lg bg-white">
+          <div className="p-4">
+            <h1 className="text-2xl font-bold mb-4">Task Todo List</h1>
+            <div className="space-y-2">
+              {tasks.map((task) => (
+                <div key={task.taskId} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={`task-${task.taskId}`}
+                    checked={task.completed}
+                    onChange={() => handleComplete(task.taskId)}
+                  />
+                  <label
+                    htmlFor={`task-${task.taskId}`}
+                    className={`flex-grow ${
+                      task.completed ? "line-through text-gray-500" : ""
+                    }`}
+                  >
+                    {task.todo}
+                  </label>
+                  <button
+                    className="bg-red-500 text-white px-2 py-1 rounded"
+                    onClick={() => handleDelete(task.taskId)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col space-y-4 p-4 border-t">
+            <div className="flex space-x-2 w-full">
+              <input
+                type="text"
+                placeholder="Add a new task"
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && addTask()}
+                className="border rounded p-2 flex-grow"
+              />
+              <button
+                className="bg-blue-500 text-white px-4 rounded"
+                onClick={addTask}
+              >
+                Add
+              </button>
+            </div>
+            <div className="text-sm text-gray-500">
+              {remainingTasks} task{remainingTasks !== 1 ? "s" : ""} remaining
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
